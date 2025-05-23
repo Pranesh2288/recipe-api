@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recipes</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 8px;
+      }
+
+      .truncate {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      table {
+        width: 60%;
+        margin: 20px;
+      }
+
+      .drawer {
+        position: fixed;
+        top: 0;
+        right: -40%;
+        width: 40%;
+        height: 100%;
+        background-color: #f9f9f9;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        transition: right 0.3s ease;
+        overflow-y: auto;
+      }
+
+      .drawer.open {
+        right: 0;
+      }
+
+      .drawer-header {
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .kv {
+        margin: 5px 0;
+      }
+
+      .nutrition-table {
+        margin-top: 15px;
+        width: 100%;
+        border: 1px solid #ccc;
+      }
+
+      .nutrition-table th,
+      .nutrition-table td {
+        padding: 6px;
+        border: 1px solid #ccc;
+        text-align: left;
+      }
+
+      .expand-section {
+        cursor: pointer;
+        color: blue;
+        user-select: none;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .close-btn {
+        float: right;
+        cursor: pointer;
+        color: red;
+      }
+
+      #customSearch {
+        margin: 20px 20px 0 20px;
+        padding-bottom: 10px;
+      }
+
+      #customSearch label {
+        margin-right: 10px;
+      }
+
+      #customSearch input,
+      #customSearch select {
+        margin-right: 10px;
+      }
+
+      #cuisine-suggestions {
+        position: absolute;
+        background: #fff;
+        border: 1px solid #ccc;
+        z-index: 10;
+        display: none;
+      }
+
+      #pagination {
+        margin: 20px;
+        text-align: center;
+      }
+
+      #pagination button {
+        margin: 0 5px;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+
+      #pagination button:disabled {
+        background-color: #ddd;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1 style="margin: 20px">Recipes</h1>
+
+      <!-- Custom Search -->
+      <div id="customSearch">
+        <form
+          id="searchForm"
+          onsubmit="event.preventDefault(); customSearchRecipes();"
+        >
+          <label for="search-title">Title:</label>
+          <input
+            type="text"
+            id="search-title"
+            name="search-title"
+            style="margin-right: 10px"
+            autocomplete="off"
+          />
+
+          <label for="search-cuisine">Cuisine:</label>
+          <input
+            type="text"
+            id="search-cuisine"
+            name="search-cuisine"
+            style="margin-right: 10px"
+            autocomplete="off"
+            oninput="showCuisineSuggestions()"
+          />
+          <div
+            id="cuisine-suggestions"
+            style="
+              position: absolute;
+              background: #fff;
+              border: 1px solid #ccc;
+              z-index: 10;
+              display: none;
+            "
+          ></div>
+
+          <label for="search-rating">Rating:</label>
+          <select
+            id="search-rating-operator"
+            name="search-rating-operator"
+            style="margin-right: 5px"
+          >
+            <option value=">">&gt;</option>
+            <option value="<">&lt;</option>
+            <option value="=">=</option>
+          </select>
+          <input
+            type="number"
+            id="search-rating"
+            name="search-rating"
+            min="0"
+            max="5"
+            step="0.1"
+            style="width: 60px; margin-right: 10px"
+          />
+
+          <label for="search-time">Time (min):</label>
+          <select
+            id="search-time-operator"
+            name="search-time-operator"
+            style="margin-right: 5px"
+          >
+            <option value=">">&gt;</option>
+            <option value="<">&lt;</option>
+            <option value="=">=</option>
+          </select>
+          <input
+            type="number"
+            id="search-time"
+            name="search-time"
+            min="0"
+            style="width: 80px; margin-right: 10px"
+          />
+
+          <label for="search-calories">Calories:</label>
+          <select
+            id="search-calories-operator"
+            name="search-calories-operator"
+            style="margin-right: 5px"
+          >
+            <option value=">">&gt;</option>
+            <option value="<">&lt;</option>
+            <option value="=">=</option>
+          </select>
+          <input
+            type="number"
+            id="search-calories"
+            name="search-calories"
+            min="0"
+            style="width: 80px; margin-right: 10px"
+          />
+
+          <label for="search-page-size">Results per page:</label>
+          <input
+            type="number"
+            id="search-page-size"
+            name="search-page-size"
+            min="15"
+            max="50"
+            value="15"
+            style="width: 60px; margin-right: 10px"
+          />
+
+          <button type="submit">Search</button>
+        </form>
+      </div>
+
+      <table id="recipesTable">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Cuisine</th>
+            <th>Rating</th>
+            <th>Total Time</th>
+            <th>Serves</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div id="pagination" style="margin: 20px"></div>
+    </div>
+
+    <!-- Drawer -->
+    <div id="drawer" class="drawer">
+      <span class="close-btn" onclick="toggleDrawer()">✖</span>
+      <div id="drawerHeader" class="drawer-header"></div>
+      <div class="kv">
+        <strong>Description:</strong> <span id="desc"></span>
+      </div>
+      <div class="kv">
+        <strong>Total Time:</strong> <span id="totalTime"></span>
+        <span class="expand-section" onclick="toggleExpand()">[+]</span>
+        <div id="expandTimes" class="hidden">
+          <div>Cook Time: <span id="cookTime"></span></div>
+          <div>Prep Time: <span id="prepTime"></span></div>
+        </div>
+      </div>
+      <h3>Nutrition</h3>
+      <table class="nutrition-table">
+        <tbody id="nutritionBody"></tbody>
+      </table>
+    </div>
+    <script>
+      function populateTable(data) {
+        const tableBody = document.getElementById("tableBody");
+        tableBody.innerHTML = "";
+
+        if (data.length === 0) {
+          // Show fallback row if no results
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+          cell.colSpan = 5;
+          cell.style.textAlign = "center";
+          cell.textContent =
+            "No recipes found. Try adjusting your search filters!";
+          row.appendChild(cell);
+          tableBody.appendChild(row);
+          return;
+        }
+
+        data.forEach((recipe) => {
+          const row = document.createElement("tr");
+
+          const titleCell = document.createElement("td");
+          titleCell.className = "truncate";
+          titleCell.title = recipe.title;
+          titleCell.textContent = recipe.title;
+
+          const cuisineCell = document.createElement("td");
+          cuisineCell.textContent = recipe.cuisine;
+
+          const ratingCell = document.createElement("td");
+          ratingCell.innerHTML = "⭐".repeat(Math.round(recipe.rating));
+
+          const totalTimeCell = document.createElement("td");
+          totalTimeCell.textContent = recipe.total_time + " min";
+
+          const servesCell = document.createElement("td");
+          servesCell.textContent = recipe.serves;
+
+          row.appendChild(titleCell);
+          row.appendChild(cuisineCell);
+          row.appendChild(ratingCell);
+          row.appendChild(totalTimeCell);
+          row.appendChild(servesCell);
+
+          row.onclick = () => showDetails(recipe);
+
+          tableBody.appendChild(row);
+        });
+      }
+    </script>
+
+    <script>
+      async function fetchRecipes() {
+        try {
+          const response = await fetch("/api/recipes?page=1&limit=10");
+          const result = await response.json();
+          const data = result.data || result;
+          const tableBody = document.getElementById("tableBody");
+          tableBody.innerHTML = "";
+
+          data.forEach((recipe) => {
+            const row = document.createElement("tr");
+
+            const titleCell = document.createElement("td");
+            titleCell.className = "truncate";
+            titleCell.title = recipe.title;
+            titleCell.textContent = recipe.title;
+
+            const cuisineCell = document.createElement("td");
+            cuisineCell.textContent = recipe.cuisine;
+
+            const ratingCell = document.createElement("td");
+            ratingCell.innerHTML = "⭐".repeat(Math.round(recipe.rating));
+
+            const totalTimeCell = document.createElement("td");
+            totalTimeCell.textContent = recipe.total_time + " min";
+
+            const servesCell = document.createElement("td");
+            servesCell.textContent = recipe.serves;
+
+            row.appendChild(titleCell);
+            row.appendChild(cuisineCell);
+            row.appendChild(ratingCell);
+            row.appendChild(totalTimeCell);
+            row.appendChild(servesCell);
+
+            // Add click listener to open drawer
+            row.onclick = () => showDetails(recipe);
+
+            tableBody.appendChild(row);
+          });
+        } catch (err) {
+          console.error("Error fetching recipes:", err);
+        }
+      }
+
+      function showDetails(recipe) {
+        document.getElementById("drawer").classList.add("open");
+        document.getElementById(
+          "drawerHeader"
+        ).textContent = `${recipe.title} (${recipe.cuisine})`;
+        document.getElementById("desc").textContent =
+          recipe.description || "N/A";
+        document.getElementById("totalTime").textContent =
+          recipe.total_time + " min";
+        document.getElementById("cookTime").textContent =
+          recipe.cook_time + " min";
+        document.getElementById("prepTime").textContent =
+          recipe.prep_time + " min";
+
+        const nutrition = recipe.nutrients || {};
+        const nutritionBody = document.getElementById("nutritionBody");
+        nutritionBody.innerHTML = "";
+
+        const keys = [
+          "calories",
+          "carbohydrateContent",
+          "cholesterolContent",
+          "fiberContent",
+          "proteinContent",
+          "saturatedFatContent",
+          "sodiumContent",
+          "sugarContent",
+          "fatContent",
+        ];
+
+        keys.forEach((key) => {
+          const row = document.createElement("tr");
+          const keyCell = document.createElement("td");
+          const valCell = document.createElement("td");
+          keyCell.textContent = key;
+          valCell.textContent = nutrition[key] || "N/A";
+          row.appendChild(keyCell);
+          row.appendChild(valCell);
+          nutritionBody.appendChild(row);
+        });
+
+        document.getElementById("expandTimes").classList.add("hidden");
+      }
+
+      function toggleDrawer() {
+        document.getElementById("drawer").classList.remove("open");
+      }
+
+      function toggleExpand() {
+        const el = document.getElementById("expandTimes");
+        el.classList.toggle("hidden");
+      }
+
+      // --- Cuisine Suggestions Logic ---
+      let allCuisines = [];
+      let lastCuisineInput = "";
+
+      async function fetchCuisines(partial) {
+        // This function should call your backend or filter from a list
+        // For demo, we'll use a static list. Replace with API if needed.
+        if (allCuisines.length === 0) {
+          // Fetch all categories from the backend if not already fetched
+
+          allCuisines = [
+            "Amish and Mennonite Recipes",
+            "Apple Muffins",
+            "Bagels",
+            "Baked Pancakes",
+            "Banana Bread",
+            "Banana Cake",
+            "Banana Muffins",
+            "Banana Nut Bread",
+            "Banana Pancakes",
+            "Banana Pudding",
+            "Banana Smoothies",
+            "Biscuit",
+            "Blintz",
+            "Blueberry Muffins",
+            "Blueberry Smoothies",
+            "Boston",
+            "Bourbon Drinks",
+            "Bran Muffins",
+            "Breakfast and Brunch",
+            "Breakfast Bacon",
+            "Breakfast Beef",
+            "Breakfast Bowls",
+            "Breakfast Bread",
+            "Breakfast Burritos",
+            "Breakfast Casseroles",
+            "Breakfast Cereals",
+            "Breakfast Chicken",
+            "Breakfast Cookies",
+            "Breakfast Drinks",
+            "Breakfast Eggs",
+            "Breakfast Ham",
+            "Breakfast Meat and Seafood",
+            "Breakfast Pizza",
+            "Breakfast Potatoes",
+            "Breakfast Quiche",
+            "Breakfast Sandwiches",
+            "Breakfast Sausage",
+            "Breakfast Seafood",
+            "Breakfast Strata",
+            "Brunswick Stew",
+            "Buttermilk Pancakes",
+            "Cajun and Creole Recipes",
+            "Carrot Muffins",
+            "Catfish Recipes",
+            "Chess Pie",
+            "Chicken and Dumplings",
+            "Chocolate Banana Bread",
+            "Chocolate Muffins",
+            "Cinnamon Rolls",
+            "Coffee Cake",
+            "Coffee Drinks",
+            "Collard Greens Recipes",
+            "Connecticut",
+            "Corn Muffins",
+            "Cranberry Muffins",
+            "Creamer",
+            "Crepes and Blintzes",
+            "Dairy Bread",
+            "Dairy Desserts",
+            "Dairy Salads",
+            "Dairy Side Dishes",
+            "Danishes",
+            "Doughnuts",
+            "Drink Flavoring & Simple Syrups",
+            "Everyday Passover Meals",
+            "French Toast",
+            "French Toast Casserole",
+            "Fried Chicken",
+            "Fried Green Tomatoes",
+            "Frittata",
+            "Granola",
+            "Green Smoothies",
+            "Gumbo",
+            "Ham Breakfast Casserole",
+            "Hanukkah Appetizers",
+            "Hanukkah Brisket",
+            "Hanukkah Cookies",
+            "Hanukkah Doughnuts",
+            "Hanukkah Kugel",
+            "Hanukkah Latkes",
+            "Hanukkah Recipes",
+            "Hash Brown Breakfast Casserole",
+            "Hash Brown Potatoes",
+            "Healthy Breakfast and Brunch",
+            "Hurricanes",
+            "Iced Tea",
+            "Jambalaya",
+            "Jewish Recipes",
+            "Kolache",
+            "Kosher Appetizers",
+            "Kosher Bread",
+            "Kosher Chicken Salad",
+            "Kosher Dairy Appetizers",
+            "Kosher Desserts",
+            "Kosher Main Dishes",
+            "Kosher Meat Appetizers",
+            "Kosher Recipes",
+            "Kosher Salads",
+            "Kosher Side Dishes",
+            "Kosher Soups and Stews",
+            "Lattes",
+            "Maine",
+            "Mango Smoothies",
+            "Massachusetts",
+            "Mochas",
+            "Monkey Bread",
+            "Muffins",
+            "New England Recipes",
+            "New Hampshire",
+            "Okra Recipes",
+            "Omelets",
+            "Orange Smoothies",
+            "Overnight Oats",
+            "Pancakes",
+            "Parve Appetizers",
+            "Parve Bread",
+            "Parve Desserts",
+            "Parve Salads",
+            "Parve Side Dishes",
+            "Passover Recipes",
+            "Pastries",
+            "Peach Cake",
+            "Peach Cobbler",
+            "Peach Crisps and Crumbles",
+            "Peach Desserts",
+            "Peach Pie",
+            "Peach Recipes",
+            "Peach Salsa",
+            "Pecan Pie",
+            "Poppy Seed Muffins",
+            "Potato Breakfast Casserole",
+            "Potato Pancakes",
+            "Pralines",
+            "Pumpkin Muffins",
+            "Purim Recipes",
+            "Red Velvet Cake",
+            "Rhode Island",
+            "Rosh Hashanah Recipes",
+            "Sausage Breakfast Casserole",
+            "Savory Crepes",
+            "Scones",
+            "Scrambled Eggs",
+            "Seder Appetizers",
+            "Seder Main Dishes",
+            "Seder Recipes",
+            "Seder Side Dishes",
+            "Shrimp and Grits",
+            "Smoothie Bowl Recipes",
+            "Smoothies",
+            "Soul Food Recipes",
+            "Southern Appetizers",
+            "Southern Beef Main Dishes",
+            "Southern Bread",
+            "Southern Breakfast and Brunch",
+            "Southern Chicken Main Dishes",
+            "Southern Desserts",
+            "Southern Drinks",
+            "Southern Main Dishes",
+            "Southern Pork Main Dishes",
+            "Southern Recipes",
+            "Southern Seafood Main Dishes",
+            "Southern Side Dishes",
+            "Southern Soups and Stews",
+            "Sticky Buns",
+            "Strawberry Smoothies",
+            "Sweet Crepes",
+            "Sweet Potato Pie",
+            "Syrups",
+            "Tex-Mex Recipes",
+            "Veggie Smoothies",
+            "Vermont",
+            "Waffles",
+            "Whiskey Drinks",
+            "Whole Grain Pancakes",
+            "Whole Wheat Muffins",
+            "Zucchini Bread",
+            "Zucchini Muffins",
+          ];
+        }
+        return allCuisines.filter((cat) =>
+          cat.toLowerCase().includes(partial.toLowerCase())
+        );
+      }
+
+      async function showCuisineSuggestions() {
+        const input = document.getElementById("search-cuisine");
+        const suggestionsDiv = document.getElementById("cuisine-suggestions");
+        const value = input.value.trim();
+        if (!value) {
+          suggestionsDiv.style.display = "none";
+          return;
+        }
+        lastCuisineInput = value;
+        const suggestions = await fetchCuisines(value);
+        if (input.value.trim() !== lastCuisineInput) return; // Prevent race
+        if (suggestions.length === 0) {
+          suggestionsDiv.style.display = "none";
+          return;
+        }
+        suggestionsDiv.innerHTML = suggestions
+          .map(
+            (cuisine) =>
+              `<div style='padding:4px;cursor:pointer;' onclick='selectCuisineSuggestion("${cuisine}")'>${cuisine}</div>`
+          )
+          .join("");
+        const rect = input.getBoundingClientRect();
+        suggestionsDiv.style.left = rect.left + "px";
+        suggestionsDiv.style.top = rect.bottom + window.scrollY + "px";
+        suggestionsDiv.style.width = rect.width + "px";
+        suggestionsDiv.style.display = "block";
+      }
+
+      function selectCuisineSuggestion(cuisine) {
+        document.getElementById("search-cuisine").value = cuisine;
+        document.getElementById("cuisine-suggestions").style.display = "none";
+      }
+      document.addEventListener("click", function (e) {
+        if (
+          !document.getElementById("cuisine-suggestions").contains(e.target) &&
+          e.target.id !== "search-cuisine"
+        ) {
+          document.getElementById("cuisine-suggestions").style.display = "none";
+        }
+      });
+
+      let allRecipes = [];
+      let currentPage = 1;
+
+      function renderPagination(page, total, limit) {
+        const paginationDiv = document.getElementById("pagination");
+        paginationDiv.innerHTML = "";
+        if (!total || total <= limit) return;
+        const totalPages = Math.ceil(total / limit);
+        const prevBtn = document.createElement("button");
+        prevBtn.textContent = "Previous";
+        prevBtn.disabled = page <= 1;
+        prevBtn.onclick = () => gotoPage(page - 1);
+        paginationDiv.appendChild(prevBtn);
+        for (let i = 1; i <= totalPages; i++) {
+          const btn = document.createElement("button");
+          btn.textContent = i;
+          btn.disabled = i === page;
+          btn.onclick = () => gotoPage(i);
+          paginationDiv.appendChild(btn);
+        }
+        const nextBtn = document.createElement("button");
+        nextBtn.textContent = "Next";
+        nextBtn.disabled = page >= totalPages;
+        nextBtn.onclick = () => gotoPage(page + 1);
+        paginationDiv.appendChild(nextBtn);
+      }
+
+      function gotoPage(page) {
+        currentPage = page;
+        renderCurrentPage();
+      }
+
+      function renderCurrentPage() {
+        const pageSize =
+          parseInt(document.getElementById("search-page-size").value, 10) || 15;
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        populateTable(allRecipes.slice(start, end));
+        renderPagination(currentPage, allRecipes.length, pageSize);
+      }
+
+      async function fetchAndRenderRecipesFrontend(queryParams) {
+        // Build the API URL without page and limit
+        let url = "/api/recipes/search";
+        const params = new URLSearchParams(queryParams);
+        params.delete("limit");
+        params.delete("page");
+        const paramString = params.toString();
+        if (paramString) url += "?" + paramString;
+        try {
+          console.log("url");
+          const response = await fetch(url);
+          const result = await response.json();
+          allRecipes = result.data || result;
+          currentPage = 1;
+          renderCurrentPage();
+        } catch (err) {
+          console.error("Search failed:", err);
+        }
+      }
+
+      async function customSearchRecipes() {
+        const title = document.getElementById("search-title").value.trim();
+        const cuisine = document.getElementById("search-cuisine").value.trim();
+        const rating = document.getElementById("search-rating").value;
+        const ratingOp = document.getElementById(
+          "search-rating-operator"
+        ).value;
+        const time = document.getElementById("search-time").value;
+        const timeOp = document.getElementById("search-time-operator").value;
+        const calories = document.getElementById("search-calories").value;
+        const caloriesOp = document.getElementById(
+          "search-calories-operator"
+        ).value;
+        // No page/limit in queryParams
+        const queryParams = new URLSearchParams();
+        if (title) queryParams.append("title", title);
+        if (cuisine) queryParams.append("cuisine", cuisine);
+        if (rating) queryParams.append("rating", ratingOp + rating);
+        if (time) queryParams.append("total_time", timeOp + time);
+        if (calories) queryParams.append("calories", caloriesOp + calories);
+        fetchAndRenderRecipesFrontend(queryParams);
+      }
+
+      // Initial fetch
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("pagination").innerHTML = "";
+        fetchAndRenderRecipesFrontend(new URLSearchParams());
+      });
+    </script>
+  </body>
+</html>

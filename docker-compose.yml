@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: recipeuser
+      POSTGRES_PASSWORD: recipepass
+      POSTGRES_DB: recipedb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: recipeuser
+      DB_PASSWORD: recipepass
+      DB_NAME: recipedb
+    depends_on:
+      - db
+    volumes:
+      # - ./data:/usr/src/app/data
+      # - .:/usr/src/app
+      - ./public:/app/public
+
+volumes:
+  pgdata:
