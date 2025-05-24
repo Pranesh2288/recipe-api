@@ -6,43 +6,79 @@
     <title>Recipes</title>
     <style>
       body {
-        font-family: Arial, sans-serif;
+        font-family: "Segoe UI", Arial, sans-serif;
         margin: 0;
         padding: 0;
         display: flex;
+        background: #f4f6fb;
+        min-height: 100vh;
+        justify-content: center;
+        align-items: center;
       }
 
-      table,
-      th,
+      h1 {
+        color: #3b3b3b;
+        letter-spacing: 1px;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 8px #e0e7ff;
+        text-align: center;
+      }
+
+      table {
+        width: 70%;
+        margin: 30px 30px 10px 30px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px rgba(60, 60, 120, 0.08);
+        overflow: hidden;
+        border: none;
+      }
+
+      th {
+        background: #6366f1;
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.1rem;
+        border: none;
+        padding: 14px 10px;
+      }
+
       td {
-        border: 1px solid black;
-        border-collapse: collapse;
-        padding: 8px;
+        background: #f4f6fb;
+        color: #333;
+        font-size: 1rem;
+        border: none;
+        padding: 12px 10px;
+        transition: background 0.2s;
+      }
+
+      tr:hover td {
+        background: #e0e7ff;
+        cursor: pointer;
       }
 
       .truncate {
-        max-width: 200px;
+        max-width: 220px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
-      table {
-        width: 60%;
-        margin: 20px;
-      }
-
       .drawer {
         position: fixed;
         top: 0;
-        right: -40%;
+        right: -100vw;
         width: 40%;
         height: 100%;
-        background-color: #f9f9f9;
-        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
-        padding: 20px;
-        transition: right 0.3s ease;
+        background: #e8eaf0;
+        box-shadow: -4px 0 24px rgba(60, 60, 120, 0.12);
+        padding: 32px 28px 28px 28px;
+        transition: right 0.3s cubic-bezier(0.4, 2, 0.6, 1);
         overflow-y: auto;
+        border-top-left-radius: 18px;
+        border-bottom-left-radius: 18px;
+        z-index: 100;
       }
 
       .drawer.open {
@@ -51,31 +87,50 @@
 
       .drawer-header {
         font-weight: bold;
-        font-size: 18px;
-        margin-bottom: 10px;
+        font-size: 1.5rem;
+        margin-bottom: 18px;
+        color: #3730a3;
+        letter-spacing: 1px;
       }
 
       .kv {
-        margin: 5px 0;
+        margin: 10px 0;
+        font-size: 1.08rem;
       }
 
       .nutrition-table {
-        margin-top: 15px;
+        margin-top: 18px;
         width: 100%;
-        border: 1px solid #ccc;
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 2px 8px #e0e7ff;
+        background: #f4f6fb;
       }
 
-      .nutrition-table th,
+      .nutrition-table th {
+        background: #818cf8;
+        color: #fff;
+        font-size: 1rem;
+        border: none;
+      }
+
       .nutrition-table td {
-        padding: 6px;
-        border: 1px solid #ccc;
-        text-align: left;
+        border: none;
+        padding: 8px 10px;
+        color: #444;
       }
 
       .expand-section {
         cursor: pointer;
-        color: blue;
+        color: #6366f1;
         user-select: none;
+        margin-left: 8px;
+        font-size: 0.95em;
+        font-weight: 500;
+      }
+
+      .expand-section:hover {
+        text-decoration: underline;
       }
 
       .hidden {
@@ -85,51 +140,120 @@
       .close-btn {
         float: right;
         cursor: pointer;
-        color: red;
+        color: #ef4444;
+        font-size: 1.5rem;
+        margin-top: -8px;
+        margin-right: -8px;
+        transition: color 0.2s;
+      }
+      .close-btn:hover {
+        color: #b91c1c;
       }
 
       #customSearch {
-        margin: 20px 20px 0 20px;
-        padding-bottom: 10px;
+        margin: 30px 30px 0 30px;
+        padding: 32px 32px 24px 32px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px #e0e7ff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 700px;
       }
 
       #customSearch label {
         margin-right: 10px;
+        font-weight: 500;
+        color: #3730a3;
       }
 
       #customSearch input,
       #customSearch select {
         margin-right: 10px;
+        border: 1px solid #c7d2fe;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 1rem;
+        background: #f4f6fb;
+        transition: border 0.2s;
+      }
+      #customSearch input:focus,
+      #customSearch select:focus {
+        border: 1.5px solid #6366f1;
+        outline: none;
+      }
+
+      #customSearch button[type="submit"] {
+        background: #6366f1;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 7px 18px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+        box-shadow: 0 2px 8px #e0e7ff;
+        transition: background 0.2s;
+      }
+      #customSearch button[type="submit"]:hover {
+        background: #3730a3;
       }
 
       #cuisine-suggestions {
         position: absolute;
         background: #fff;
-        border: 1px solid #ccc;
+        border: 1px solid #c7d2fe;
         z-index: 10;
         display: none;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px #e0e7ff;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      #cuisine-suggestions div {
+        padding: 7px 12px;
+        cursor: pointer;
+        color: #3730a3;
+        font-size: 1rem;
+      }
+      #cuisine-suggestions div:hover {
+        background: #e0e7ff;
       }
 
       #pagination {
-        margin: 20px;
+        margin: 30px 0 30px 30px;
         text-align: center;
       }
 
       #pagination button {
         margin: 0 5px;
-        padding: 5px 10px;
+        padding: 7px 14px;
+        border-radius: 6px;
+        border: none;
+        background: #6366f1;
+        color: #fff;
+        font-weight: 500;
+        font-size: 1rem;
         cursor: pointer;
+        box-shadow: 0 2px 8px #e0e7ff;
+        transition: background 0.2s;
       }
-
       #pagination button:disabled {
         background-color: #ddd;
+        color: #888;
         cursor: not-allowed;
+        box-shadow: none;
+      }
+      #pagination button:not(:disabled):hover {
+        background: #3730a3;
       }
     </style>
   </head>
   <body>
     <div>
-      <h1 style="margin: 20px">Recipes</h1>
+      <h1 style="margin: 20px; text-align: center">Recipes</h1>
 
       <!-- Custom Search -->
       <div id="customSearch">
@@ -237,7 +361,7 @@
         </form>
       </div>
 
-      <table id="recipesTable">
+      <table id="recipesTable" style="margin-left: auto; margin-right: auto">
         <thead>
           <tr>
             <th>Title</th>
@@ -251,7 +375,7 @@
       </table>
 
       <!-- Pagination -->
-      <div id="pagination" style="margin: 20px"></div>
+      <div id="pagination" style="margin: 20px; text-align: center"></div>
     </div>
 
     <!-- Drawer -->
@@ -304,7 +428,7 @@
           cuisineCell.textContent = recipe.cuisine;
 
           const ratingCell = document.createElement("td");
-          ratingCell.innerHTML = "⭐".repeat(Math.round(recipe.rating));
+          ratingCell.innerHTML = renderStars(recipe.rating);
 
           const totalTimeCell = document.createElement("td");
           totalTimeCell.textContent = recipe.total_time + " min";
@@ -322,6 +446,38 @@
 
           tableBody.appendChild(row);
         });
+      }
+
+      function renderStars(rating) {
+        const fullStars = Math.floor(rating);
+        const halfStar =
+          rating - fullStars >= 0.25 && rating - fullStars < 0.75;
+        const partial = rating - fullStars;
+        let starsHtml = "";
+        for (let i = 0; i < fullStars; i++) {
+          starsHtml +=
+            '<span style="color:#fbbf24;font-size:1.2em">&#9733;</span>';
+        }
+        if (partial >= 0.75) {
+          starsHtml +=
+            '<span style="color:#fbbf24;font-size:1.2em">&#9733;</span>';
+        } else if (halfStar) {
+          starsHtml += `<span style="position:relative;display:inline-block;width:1.2em;height:1.2em;">
+            <span style="color:#fbbf24;position:absolute;overflow:hidden;width:${Math.round(
+              partial * 100
+            )}%;">&#9733;</span>
+            <span style="color:#e5e7eb;">&#9733;</span>
+          </span>`;
+        }
+        for (
+          let i = fullStars + (halfStar || partial >= 0.75 ? 1 : 0);
+          i < 5;
+          i++
+        ) {
+          starsHtml +=
+            '<span style="color:#e5e7eb;font-size:1.2em">&#9733;</span>';
+        }
+        return starsHtml;
       }
     </script>
 
@@ -346,7 +502,7 @@
             cuisineCell.textContent = recipe.cuisine;
 
             const ratingCell = document.createElement("td");
-            ratingCell.innerHTML = "⭐".repeat(Math.round(recipe.rating));
+            ratingCell.innerHTML = renderStars(recipe.rating);
 
             const totalTimeCell = document.createElement("td");
             totalTimeCell.textContent = recipe.total_time + " min";
@@ -667,18 +823,67 @@
         paginationDiv.innerHTML = "";
         if (!total || total <= limit) return;
         const totalPages = Math.ceil(total / limit);
+        const maxVisible = 10;
+        const pageButtons = [];
+
         const prevBtn = document.createElement("button");
         prevBtn.textContent = "Previous";
         prevBtn.disabled = page <= 1;
         prevBtn.onclick = () => gotoPage(page - 1);
         paginationDiv.appendChild(prevBtn);
-        for (let i = 1; i <= totalPages; i++) {
+
+        // Always show first page
+        if (page > maxVisible) {
+          const firstBtn = document.createElement("button");
+          firstBtn.textContent = "1";
+          firstBtn.disabled = page === 1;
+          firstBtn.onclick = () => gotoPage(1);
+          paginationDiv.appendChild(firstBtn);
+          if (page > maxVisible + 1) {
+            const dots = document.createElement("span");
+            dots.textContent = "...";
+            dots.style.margin = "0 4px";
+            paginationDiv.appendChild(dots);
+          }
+        }
+
+        // Calculate start and end for visible page numbers
+        let start = Math.max(1, page - Math.floor(maxVisible / 2));
+        let end = start + maxVisible - 1;
+        if (end > totalPages) {
+          end = totalPages;
+          start = Math.max(1, end - maxVisible + 1);
+        }
+
+        for (let i = start; i <= end; i++) {
+          // Skip first/last if already shown
+          if (
+            (i === 1 && page > maxVisible) ||
+            (i === totalPages && page <= totalPages - maxVisible)
+          )
+            continue;
           const btn = document.createElement("button");
           btn.textContent = i;
           btn.disabled = i === page;
           btn.onclick = () => gotoPage(i);
           paginationDiv.appendChild(btn);
         }
+
+        // Always show last page
+        if (end < totalPages) {
+          if (end < totalPages - 1) {
+            const dots = document.createElement("span");
+            dots.textContent = "...";
+            dots.style.margin = "0 4px";
+            paginationDiv.appendChild(dots);
+          }
+          const lastBtn = document.createElement("button");
+          lastBtn.textContent = totalPages;
+          lastBtn.disabled = page === totalPages;
+          lastBtn.onclick = () => gotoPage(totalPages);
+          paginationDiv.appendChild(lastBtn);
+        }
+
         const nextBtn = document.createElement("button");
         nextBtn.textContent = "Next";
         nextBtn.disabled = page >= totalPages;
