@@ -70,7 +70,7 @@ app.get(
       const total = parseInt(totalResult.rows[0].count);
 
       const result = await pool.query(
-        "SELECT * FROM recipes ORDER BY rating DESC, id ASC LIMIT $1 OFFSET $2;",
+        "SELECT * FROM recipes ORDER BY CASE WHEN rating IS NULL THEN -1 ELSE rating END DESC, id ASC LIMIT $1 OFFSET $2;",
         [limit, offset]
       );
 
