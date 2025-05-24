@@ -16,7 +16,7 @@ A secure, modern RESTful API for searching and listing recipes, built with Node.
 
 - **Query Params:**
   - `page` (int, optional): Page number (default: 1)
-  - `limit` (int, optional): Results per page (default: 10, max: 100)
+  - `limit` (int, optional): Results per page (default: 10, max: 50)
 - **Returns:** Paginated list of recipes, ordered by rating (NULL ratings always last).
 
 ### `GET /api/recipes/search`
@@ -31,17 +31,17 @@ A secure, modern RESTful API for searching and listing recipes, built with Node.
 
 #### Get paginated recipes (page 2, 5 per page)
 ```http
-GET /api/recipes?page=2&limit=5
+GET /api/recipes?page=2&limit=15
 ```
 
 #### Search by title
 ```http
-GET /api/recipes/search?title=chicken
+GET /api/recipes/search?title=Sweet
 ```
 
 #### Search by cuisine and minimum rating
 ```http
-GET /api/recipes/search?cuisine=Indian&rating=>=4.5
+GET /api/recipes/search?cuisine=Southern Recipes&rating=>=4.5
 ```
 
 #### Search by calories and total time
@@ -51,7 +51,7 @@ GET /api/recipes/search?calories=<=500&total_time=<=30
 
 #### Combined search
 ```http
-GET /api/recipes/search?title=pasta&cuisine=Italian&rating=>=3.5&calories=<=600
+GET /api/recipes/search?title=Sweet Potato Pie&cuisine=Southern Recipes&rating=>3.5&calories=<=600
 ```
 
 ## Security Highlights
@@ -80,11 +80,3 @@ To stop and remove the containers, network, and volumes created by Docker Compos
 docker-compose down
 ```
 
-## Customization
-
-- **CORS:** Add your production domain to the `allowedOrigins` array in `src/index.js`.
-- **Frontend:** Edit `public/index.html` for UI changes. Partial stars are rendered for ratings (e.g., 3.8 shows 3 full and 1 partial star).
-
-## License
-
-MIT
